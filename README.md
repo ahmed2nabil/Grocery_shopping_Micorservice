@@ -36,19 +36,14 @@
       <td><li>Node.js</li> </td>
       <td><li>RabbitMQ</li></td>
       <td><li>Express</li></td>
-      <td><li>stripe</li></td>
-      <td><li>nodemailer</li></td>
     </tr>
    <tr>
     <td><li>jsonwebtoken (JWT)</li></td>
-    <td><li>joi</li></td>
-    <td><li>AWS s3</li></td>
-    <td><li>AWS EC2</li></td>
+    <td><li>AWS Elastic beanstalk</li></td>
     <td><li>Nginx</li></td>
-    <td><li>Swagger</li></td>
   </tr>
   <tr>
-    <td><li>PostgreSQL</li></td>
+    <td><li>MongoDB</li></td>
     <td><li>Docker</li></td>
    </tr>
  </table>
