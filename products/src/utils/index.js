@@ -1,12 +1,16 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const amqplib = require("amqplib");
+const { v4: uuid4 } = require("uuid");
+
 const {  
   APP_SECRET,
   BASE_URL,
   EXCHANGE_NAME,
   MSG_QUEUE_URL
 } = require("../config");
+
+let amqplibConnection = null;
 
 //Utility functions
 module.exports.GenerateSalt = async () => {
@@ -58,11 +62,16 @@ module.exports.FormateData = (data) => {
 //
 
 //Message Broker
+const getChannel = async () => {
+  if (amqplibConnection === null) {
+    amqplibConnection = await amqplib.connect(MSG_QUEUE_URL);
+  }
+  return await amqplibConnection.createChannel();
+};
 
 module.exports.CreateChannel = async () => {
   try {
-    const connection = await amqplib.connect(MSG_QUEUE_URL);
-    const channel = await connection.createChannel();
+    const channel = await getChannel();
     await channel.assertQueue(EXCHANGE_NAME, "direct", { durable: true });
     return channel;
   } catch (err) {
@@ -75,24 +84,31 @@ module.exports.PublishMessage = (channel, service, msg) => {
   console.log("Sent: ", msg);
 };
 
-module.exports.SubscribeMessage = async (channel, service) => {
-  await channel.assertExchange(EXCHANGE_NAME, "direct", { durable: true });
-  const q = await channel.assertQueue("", { exclusive: true });
-  console.log(` Waiting for messages in queue: ${q.queue}`);
-
-  channel.bindQueue(q.queue, EXCHANGE_NAME, CUSTOMER_SERVICE);
-
+module.exports.RPCObserver = async (RPC_QUEUE_NAME, service) => {
+  const channel = await getChannel();
+  await channel.assertQueue(RPC_QUEUE_NAME, {
+    durable: false,
+  });
+  channel.prefetch(1);
   channel.consume(
-    q.queue,
-    (msg) => {
+    RPC_QUEUE_NAME,
+    async (msg) => {
       if (msg.content) {
-        console.log("the message is:", msg.content.toString());
-        service.SubscribeEvents(msg.content.toString());
+        // DB Operation
+        const payload = JSON.parse(msg.content.toString());
+        const response = await service.serveRPCRequest(payload);
+        channel.sendToQueue(
+          msg.properties.replyTo,
+          Buffer.from(JSON.stringify(response)),
+          {
+            correlationId: msg.properties.correlationId,
+          }
+        );
+        channel.ack(msg);
       }
-      console.log("[X] received");
     },
     {
-      noAck: true,
+      noAck: false,
     }
   );
 };
