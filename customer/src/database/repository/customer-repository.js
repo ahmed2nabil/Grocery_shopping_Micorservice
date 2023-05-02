@@ -3,7 +3,7 @@ const {
   APIError,
   BadRequestError,
   STATUS_CODES,
-} = require("../../utils/app-errors");
+} = require("../../utils/errors/app-errors");
 
 //Dealing with data base operations
 class CustomerRepository {

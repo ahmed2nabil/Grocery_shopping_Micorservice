@@ -6,6 +6,10 @@ const {
   GenerateSignature,
   ValidatePassword,
 } = require("../utils");
+const {
+  NotFoundError,
+  ValidationError,
+} = require("../utils/errors/app-errors");
 
 // All Business logic will be here
 class CustomerService {
@@ -18,22 +22,22 @@ class CustomerService {
 
     const existingCustomer = await this.repository.FindCustomer({ email });
 
-    if (existingCustomer) {
-      const validPassword = await ValidatePassword(
-        password,
-        existingCustomer.password,
-        existingCustomer.salt
-      );
-      if (validPassword) {
-        const token = await GenerateSignature({
-          email: existingCustomer.email,
-          _id: existingCustomer._id,
-        });
-        return FormateData({ id: existingCustomer._id, token });
-      }
-    }
+    if (!existingCustomer)
+      throw new NotFoundError("user not found with provided email id!");
 
-    return FormateData(null);
+    const validPassword = await ValidatePassword(
+      password,
+      existingCustomer.password,
+      existingCustomer.salt
+    );
+    if (!validPassword) throw new ValidationError("password does not match!");
+
+    const token = await GenerateSignature({
+      email: existingCustomer.email,
+      _id: existingCustomer._id,
+    });
+
+    return { id: existingCustomer._id, token };
   }
 
   async SignUp(userInputs) {
@@ -55,26 +59,23 @@ class CustomerService {
       email: email,
       _id: existingCustomer._id,
     });
-    return FormateData({ id: existingCustomer._id, token });
+    return { id: existingCustomer._id, token };
   }
 
   async AddNewAddress(_id, userInputs) {
     const { street, postalCode, city, country } = userInputs;
 
-    const addressResult = await this.repository.CreateAddress({
+    return this.repository.CreateAddress({
       _id,
       street,
       postalCode,
       city,
       country,
     });
-
-    return FormateData(addressResult);
   }
 
   async GetProfile(id) {
-    const existingCustomer = await this.repository.FindCustomerById({ id });
-    return FormateData(existingCustomer);
+    return this.repository.FindCustomerById({ id });
   }
 
   async DeleteProfile(userId) {
