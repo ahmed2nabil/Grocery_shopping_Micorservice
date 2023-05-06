@@ -15,5 +15,6 @@ module.exports = {
   BASE_URL: process.env.BASE_URL,
   EXCHANGE_NAME: process.env.EXCHANGE_NAME,
   MSG_QUEUE_URL: process.env.MSG_QUEUE_URL,
-  CUSTOMER_SERVICE: "customer_service"
+  CUSTOMER_SERVICE: "customer_service",
+  DSN : process.env.DSN
 };

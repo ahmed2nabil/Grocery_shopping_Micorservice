@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@sentry/node": "^7.50.0",
+    "@sentry/tracing": "^7.50.0",
     "amqplib": "^0.10.3",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
@@ -21,7 +23,7 @@
   "scripts": {
     "dev": "set NODE_ENV=dev&& nodemon src/index.js",
     "start": "nodemon src/index.js",
-    "test" : "jest"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC"
